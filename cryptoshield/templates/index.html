@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>CryptoShield Dashboard</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --panel:#ffffff; --text:#111318; --muted:#5b6270;
+    --border:#e2e4e9; --accent:#4f46e5; --good:#15803d; --bad:#b91c1c;
+    --mono-bg:#0f1117; --mono-text:#7ee787;
+  }
+  *{box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;padding:24px;}
+  .wrap{max-width:960px;margin:0 auto;}
+  header{text-align:center;margin-bottom:16px;}
+  h1{font-size:1.6rem;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:.9rem;margin:0;}
+  .welcome{display:flex;justify-content:space-between;align-items:center;margin:20px 0 16px;font-weight:600;}
+  .welcome form{margin:0;}
+  h2{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:24px 0 10px;}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 16px;}
+  .card .name{font-weight:600;margin:0 0 6px;}
+  .card .state{font-weight:700;color:var(--good);font-size:1.05rem;margin:0;}
+  .card .detail{color:var(--muted);font-size:.82rem;margin:2px 0 0;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:700px){.grid2,.cards{grid-template-columns:1fr;}}
+  .label{color:var(--muted);font-size:.78rem;margin:0 0 6px;}
+  .hexbox{background:var(--mono-bg);color:var(--mono-text);border-radius:8px;padding:10px 12px;
+          font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.75rem;word-break:break-all;
+          max-height:90px;overflow-y:auto;}
+  textarea,input[type=password]{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font:inherit;}
+  textarea{resize:vertical;}
+  input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .field{margin-bottom:12px;}
+  button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;
+         font-weight:600;font-size:.85rem;cursor:pointer;}
+  button:hover{opacity:.88;}
+  button:disabled{opacity:.4;cursor:not-allowed;}
+  button.outline{background:transparent;color:var(--text);border:1px solid var(--border);}
+  .row{display:flex;gap:10px;}
+  .row > *{flex:1;}
+  .check{display:flex;align-items:center;gap:8px;font-size:.9rem;padding:3px 0;}
+  .ok{color:var(--good);}
+  .bad{color:var(--bad);}
+  .pending{color:var(--muted);}
+  .status{font-weight:700;font-size:.9rem;}
+  .alert{border-radius:10px;padding:12px 14px;margin-top:12px;font-size:.88rem;}
+  .alert.danger{background:#fef2f2;border:1px solid #fecaca;color:var(--bad);}
+  .alert.danger strong{display:block;font-size:.95rem;margin-bottom:4px;}
+  .alert.success{background:#f0fdf4;border:1px solid #bbf7d0;color:var(--good);}
+  .alert dl{margin:8px 0 0;color:var(--text);display:grid;grid-template-columns:auto 1fr;gap:2px 12px;}
+  .alert dt{color:var(--muted);}
+  .alert dd{margin:0;font-weight:600;}
+  details{margin-top:10px;font-size:.82rem;}
+  summary{cursor:pointer;color:var(--muted);margin-bottom:8px;}
+  #logFeed{max-height:220px;overflow-y:auto;font-size:.78rem;}
+  .logline{border-bottom:1px solid var(--border);padding:6px 0;font-family:ui-monospace,Menlo,Consolas,monospace;}
+  .empty{color:var(--muted);font-size:.85rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🛡️ CryptoShield</h1>
+    <p class="sub">Secure Data Protection System</p>
+  </header>
+
+  <div class="welcome">
+    <span>Welcome, {{ username }}</span>
+    <form method="post" action="{{ url_for('auth.logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="outline">Logout</button>
+    </form>
+  </div>
+
+  <h2>Security status</h2>
+  <div class="cards">
+    <div class="card"><p class="name">🔐 Encryption</p><p class="state">ACTIVE</p><p class="detail">ChaCha20-Poly1305</p></div>
+    <div class="card"><p class="name">🛡️ Integrity</p><p class="state">PROTECTED</p><p class="detail">SHA-256 Verification</p></div>
+    <div class="card"><p class="name">🔑 Authentication</p><p class="state">ACTIVE</p><p class="detail">HMAC-SHA256</p></div>
+    <div class="card"><p class="name">🚨 Tamper Detection</p><p class="state">ACTIVE</p><p class="detail">Real-time Verification</p></div>
+  </div>
+  <div class="cards">
+    <div class="card"><p class="name">🔐 Key Management</p><p class="state">Keys secured ✓</p><p class="detail">Protected and hidden</p></div>
+    <div class="card"><p class="name">🕒 Last Security Check</p><p class="state" id="lastCheck" style="color:var(--text);font-size:.95rem;">{{ last_check }}</p></div>
+  </div>
+
+  <h2>Secure encryption</h2>
+  <div class="grid2">
+    <div class="panel">
+      <div class="field">
+        <label class="label" for="plaintextInput">Enter Secure Data</label>
+        <textarea id="plaintextInput" rows="3" placeholder="Type the text you want to protect"></textarea>
+      </div>
+      <div class="field">
+        <label class="label" for="encPassword">Password</label>
+        <input type="password" id="encPassword" autocomplete="new-password" placeholder="••••••••••••">
+      </div>
+      <div class="field">
+        <label class="label" for="encConfirm">Confirm Password</label>
+        <input type="password" id="encConfirm" autocomplete="new-password" placeholder="••••••••••••">
+      </div>
+      <button onclick="doEncrypt()">Encrypt Securely</button>
+      <div id="encryptMsg" role="alert"></div>
+      <div id="encryptResult" style="display:none;">
+        <div class="alert success">
+          <strong>✓ Data encrypted successfully</strong>
+          <dl>
+            <dt>Encryption</dt><dd>ChaCha20-Poly1305</dd>
+            <dt>Integrity</dt><dd>SHA-256</dd>
+            <dt>Authentication</dt><dd>HMAC-SHA256</dd>
+            <dt>Status</dt><dd>SECURE</dd>
+          </dl>
+        </div>
+        <details>
+          <summary>Technical details (not secret)</summary>
+          <p class="label">SHA-256(plaintext)</p><div class="hexbox" id="hashBox"></div><br>
+          <p class="label">Salt ID</p><div class="hexbox" id="saltBox"></div><br>
+          <p class="label">Nonce</p><div class="hexbox" id="nonceBox"></div><br>
+          <p class="label">Ciphertext (incl. Poly1305 tag)</p><div class="hexbox" id="cipherBox"></div><br>
+          <p class="label">HMAC-SHA256 envelope tag</p><div class="hexbox" id="hmacBox"></div>
+        </details>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="label" style="font-weight:600;color:var(--text);">Decrypt &amp; Verify</p>
+      <div class="field">
+        <label class="label" for="decPassword">Enter Password</label>
+        <input type="password" id="decPassword" autocomplete="off" placeholder="••••••••••••">
+      </div>
+      <div class="row">
+        <button id="decryptBtn" disabled onclick="doDecrypt()">Decrypt &amp; Verify</button>
+        <button id="tamperBtn" class="outline" disabled onclick="doTamper()">Test Tamper</button>
+      </div>
+      <div id="alertBox" role="alert"></div>
+      <div id="recoveredWrap" style="display:none;margin-top:12px;">
+        <p class="label">Original data</p>
+        <div id="recoveredBox" class="hexbox"></div>
+      </div>
+      <p class="status" id="statusPill" style="margin-top:10px;">No encrypted data yet</p>
+    </div>
+  </div>
+
+  <h2>Security verification</h2>
+  <div class="panel">
+    <div class="check pending" id="chk-hmac"><span class="ico">—</span><span>HMAC-SHA256</span></div>
+    <div class="check pending" id="chk-chacha"><span class="ico">—</span><span>ChaCha20-Poly1305</span></div>
+    <div class="check pending" id="chk-sha"><span class="ico">—</span><span>SHA-256</span></div>
+  </div>
+
+  <h2>Audit log</h2>
+  <div class="panel"><div id="logFeed"></div></div>
+</div>
+
+<script>
+const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+const hasBundle = {{ has_bundle|tojson }};
+const bundleCreated = {{ bundle_created|tojson }};
+
+async function post(url, body){
+  const r = await fetch(url, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF},
+    body: JSON.stringify(body||{})
+  });
+  if(r.status === 401){ window.location = '/login'; return {error:'Session expired'}; }
+  return r.json();
+}
+function stamp(){ document.getElementById('lastCheck').textContent = new Date().toLocaleString(); }
+function el(id){ return document.getElementById(id); }
+
+function showAlert(kind, title, text){
+  const box = el('alertBox');
+  box.innerHTML = '';
+  if(!kind) return;
+  const div = document.createElement('div');
+  div.className = 'alert danger';
+  const s = document.createElement('strong'); s.textContent = title;
+  div.appendChild(s);
+  text.split('\n').forEach(line => { const p = document.createElement('div'); p.textContent = line; div.appendChild(p); });
+  box.appendChild(div);
+}
+function setChecks(state){   // 'pending' | 'ok' | 'fail'
+  const map = {pending:['—','pending'], ok:['✅','ok'], fail:['⛔ Not verified','bad']};
+  ['chk-hmac','chk-chacha','chk-sha'].forEach(id => {
+    const row = el(id);
+    row.className = 'check ' + map[state][1];
+    row.querySelector('.ico').textContent = map[state][0];
+  });
+}
+async function refreshLog(){
+  const r = await fetch('/api/log');
+  if(r.status === 401){ window.location = '/login'; return; }
+  const data = await r.json();
+  const feed = el('logFeed');
+  feed.innerHTML = '';
+  if(!data.lines.length){ feed.innerHTML = '<div class="empty">No security events yet.</div>'; return; }
+  data.lines.forEach(l => { const d = document.createElement('div'); d.className = 'logline'; d.textContent = l; feed.appendChild(d); });
+}
+
+async function doEncrypt(){
+  const text = el('plaintextInput').value;
+  const password = el('encPassword').value;
+  const confirm_password = el('encConfirm').value;
+  el('encryptMsg').innerHTML = '';
+  const data = await post('/api/encrypt', {text, password, confirm_password});
+  if(data.error){
+    const d = document.createElement('div'); d.className = 'alert danger'; d.textContent = data.error;
+    el('encryptMsg').appendChild(d);
+    return;
+  }
+  el('hashBox').textContent = data.sha256_hash;
+  el('saltBox').textContent = data.salt_id;
+  el('nonceBox').textContent = data.nonce;
+  el('cipherBox').textContent = data.ciphertext;
+  el('hmacBox').textContent = data.hmac_tag;
+  el('encryptResult').style.display = 'block';
+  el('decryptBtn').disabled = false;
+  el('tamperBtn').disabled = false;
+  el('statusPill').textContent = 'Encrypted data ready';
+  el('recoveredWrap').style.display = 'none';
+  showAlert(null); setChecks('pending');
+  el('encPassword').value = ''; el('encConfirm').value = '';   // never keep passwords on screen
+  stamp(); refreshLog();
+}
+
+async function doDecrypt(){
+  const password = el('decPassword').value;
+  const data = await post('/api/decrypt', {password});
+  el('decPassword').value = '';
+  showAlert(null);
+  el('recoveredWrap').style.display = 'none';
+  if(data.error){ showAlert(true, '❌ Decryption failed', data.error); setChecks('fail'); stamp(); refreshLog(); return; }
+  if(data.success){
+    setChecks('ok');
+    el('recoveredBox').textContent = data.plaintext;
+    el('recoveredWrap').style.display = 'block';
+    el('statusPill').textContent = 'DECRYPTED & VERIFIED';
+  } else if(data.tampered){
+    setChecks('fail');
+    showAlert(true, '🚨 SECURITY ALERT', 'Data tampering detected!\nThe encrypted data has been modified.\nDecryption has been blocked.');
+    el('statusPill').textContent = 'BLOCKED';
+  } else {
+    setChecks('fail');
+    showAlert(true, '❌ Decryption failed', data.message);
+    el('statusPill').textContent = 'REJECTED';
+  }
+  stamp(); refreshLog();
+}
+
+async function doTamper(){
+  const data = await post('/api/tamper', {});
+  if(data.error){ showAlert(true, 'Tamper test', data.error); return; }
+  el('cipherBox').textContent = data.ciphertext;
+  el('recoveredWrap').style.display = 'none';
+  setChecks('fail');
+  if(data.tamper_detected){
+    showAlert(true, '🚨 SECURITY ALERT', 'Data tampering detected!\nThe encrypted data has been modified.\nDecryption has been blocked.');
+    el('statusPill').textContent = 'BLOCKED';
+  }
+  stamp(); refreshLog();
+}
+
+// page load
+if(hasBundle){
+  el('decryptBtn').disabled = false;
+  el('tamperBtn').disabled = false;
+  el('statusPill').textContent = 'Encrypted data found (saved ' + bundleCreated + ')';
+}
+stamp();
+refreshLog();
+</script>
+</body>
+</html>

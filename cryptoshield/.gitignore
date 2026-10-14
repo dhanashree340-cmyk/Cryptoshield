@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+cryptoshield.db
+instance/
+logs/
+master.key

@@ -1,0 +1,15 @@
+{% extends "auth_base.html" %}
+{% block title %}Register · CryptoShield{% endblock %}
+{% block content %}
+<form method="post" action="{{ url_for('auth.register') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label for="username">Username</label>
+  <input id="username" name="username" type="text" autocomplete="username" required minlength="3" maxlength="30">
+  <label for="password">Password (8 or more characters)</label>
+  <input id="password" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128">
+  <label for="confirm_password">Confirm password</label>
+  <input id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" required minlength="8" maxlength="128">
+  <button type="submit">Create account</button>
+</form>
+<p class="alt">Already registered? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+{% endblock %}
